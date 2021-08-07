@@ -94,3 +94,31 @@ def edit_entry(request, entry_id):
 
     context = {'entry': entry, 'topic': topic, 'form': form}
     return render(request, 'learning_logs/edit_entry.html', context)
+
+
+@login_required
+def public_topics(request):
+    """Show all topics."""
+    public_topics = Topic.objects.filter(owner=request.user).order_by('date_added')
+    context = {'public_topics': public_topics}
+    return render(request, 'learning_logs/public_topics.html', context)
+
+
+@login_required
+def new_public_topic(request):
+    """Add a new topic."""
+    if request.method != 'POST':
+        # No data submitted, create a blank form.
+        form = TopicForm()
+    else:
+        # POST data submitted; process data
+        form = TopicForm(data=request.POST)
+        if form.is_valid():
+            new_public_topic = form.save(commit=False)
+            new_public_topic.owner = request.user
+            new_public_topic.save()
+            return redirect('learning_logs:topics')
+
+    # Display a blank or invalid form.
+    context = {'form': form}
+    return render(request, 'learning_logs/new_public_topic.html', context)
